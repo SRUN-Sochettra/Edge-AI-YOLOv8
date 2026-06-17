@@ -1,22 +1,24 @@
-from ultralytics import YOLO
-import cv2
+from pathlib import Path
 import time
 import csv
-from pathlib import Path
 from collections import Counter
 from datetime import datetime
+
+from ultralytics import YOLO
+import cv2
 
 
 # ==========================================================
 # Paths
 # ==========================================================
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent if SCRIPT_DIR.name == "src" else SCRIPT_DIR
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 MODEL_PATH = PROJECT_ROOT / "models" / "yolov8n.pt"
+
 OUTPUT_DIR = PROJECT_ROOT / "outputs"
 SNAPSHOT_DIR = OUTPUT_DIR / "snapshots"
+
 LOG_DIR = PROJECT_ROOT / "logs"
 LOG_FILE = LOG_DIR / "roi_detection_log.csv"
 
@@ -29,6 +31,7 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 # ==========================================================
 
 WINDOW_NAME = "ROI Analytics System"
+
 CONFIDENCE = 0.50
 MIN_CONFIDENCE = 0.10
 MAX_CONFIDENCE = 0.95
@@ -146,7 +149,13 @@ def draw_roi_overlay(frame):
         height = y2 - y1
         area = width * height
 
-        draw_text(frame, f"ROI: {width}x{height} | Area: {area}", (x1, max(y1 - 10, 30)), (0, 255, 255), 0.6)
+        draw_text(
+            frame,
+            f"ROI: {width}x{height} | Area: {area}",
+            (x1, max(y1 - 10, 30)),
+            (0, 255, 255),
+            0.6
+        )
 
     elif drawing and len(roi_pts) == 1 and current_mouse_pos is not None:
         cv2.rectangle(
@@ -218,7 +227,7 @@ def main():
 
     if not MODEL_PATH.exists():
         print(f"ERROR: Model not found: {MODEL_PATH}")
-        print("Fix: move yolov8n.pt into the models folder.")
+        print("Fix: put yolov8n.pt inside the models folder.")
         return
 
     print("Loading YOLOv8 model...")
@@ -330,7 +339,6 @@ def main():
                 box_xyxy=xyxy
             )
 
-        # Dashboard text
         draw_text(display, f"FPS: {smooth_fps:.1f}", (10, 30), (0, 255, 255))
         draw_text(display, f"Confidence: {CONFIDENCE:.2f}", (10, 60), (255, 255, 255))
         draw_text(display, f"Objects in ROI: {roi_count}", (10, 90), (0, 255, 0))
@@ -351,30 +359,25 @@ def main():
 
         key = cv2.waitKeyEx(1)
 
-        # Q or q
         if key in [ord("q"), ord("Q")]:
             break
 
-        # R or r
         elif key in [ord("r"), ord("R")]:
             roi_pts = []
             roi_set = False
             drawing = False
             print("ROI reset.")
 
-        # S or s
         elif key in [ord("s"), ord("S")]:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             snapshot_path = SNAPSHOT_DIR / f"snapshot_{timestamp}.jpg"
             cv2.imwrite(str(snapshot_path), display)
             print(f"Snapshot saved: {snapshot_path}")
 
-        # + key or Up arrow
         elif key in [ord("+"), ord("="), 82, 2490368]:
             CONFIDENCE = min(MAX_CONFIDENCE, CONFIDENCE + CONFIDENCE_STEP)
             print(f"Confidence increased: {CONFIDENCE:.2f}")
 
-        # - key or Down arrow
         elif key in [ord("-"), ord("_"), 84, 2621440]:
             CONFIDENCE = max(MIN_CONFIDENCE, CONFIDENCE - CONFIDENCE_STEP)
             print(f"Confidence decreased: {CONFIDENCE:.2f}")

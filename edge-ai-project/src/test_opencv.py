@@ -1,17 +1,23 @@
 import cv2
 
-print(f"OpenCV version: {cv2.__version__}")
 
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+def main():
+    print(f"OpenCV version: {cv2.__version__}")
 
-if cap.isOpened():
-    ret, frame = cap.read()
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
-    if ret:
-        print(f"Webcam OK — Frame size: {frame.shape[1]}x{frame.shape[0]}")
+    if cap.isOpened():
+        ret, frame = cap.read()
+
+        if ret:
+            print(f"Webcam OK — Frame size: {frame.shape[1]}x{frame.shape[0]}")
+        else:
+            print("Webcam opened but failed to read a frame.")
+
+        cap.release()
     else:
-        print("Webcam opened but failed to read a frame.")
+        print("Could not open webcam. Check device connection.")
 
-    cap.release()
-else:
-    print("Could not open webcam. Check device connection.")
+
+if __name__ == "__main__":
+    main()
